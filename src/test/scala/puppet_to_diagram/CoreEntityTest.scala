@@ -42,7 +42,7 @@ class CoreEntityTest extends Specification {
       result must be equalTo Right(expected)
     }
 
-    "dependecies as list" in {
+    "fromJson should deal correctly with property with list value" in {
       val input = json"""{
         "puppet_classes": [
           {
@@ -74,7 +74,7 @@ class CoreEntityTest extends Specification {
       ))
 
       result must be equalTo Right(expected)
-    }.pendingUntilFixed("todo later")
+    }
 
     "toGraphvizGraph should generate correct graph" in {
       val input = CoreEntity("class_name", List(

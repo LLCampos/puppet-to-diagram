@@ -19,7 +19,7 @@ object CoreEntity {
     val puppetClass = json.hcursor.downField("puppet_classes").downArray
     for {
       coreEntityName <- puppetClass.downField("name").as[String]
-      properties <- defaultsCursorToOuterNodes(puppetClass.downField("defaults"), propertiesToConsider)
+      properties <- extractPropertiesFromDefaultsCursor(puppetClass.downField("defaults"), propertiesToConsider)
     } yield CoreEntity(coreEntityName, properties)
   }
 
@@ -29,10 +29,15 @@ object CoreEntity {
   private def buildBaseGraph(coreNode: Node): Graph =
     graph().`with`(coreNode).directed()
 
-  private def defaultsCursorToOuterNodes(defaultsCursor: ACursor, externalDependencies: List[String]): Either[DecodingFailure, Seq[Properties]] = {
+  private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, externalDependencies: List[String]): Either[DecodingFailure, Seq[Properties]] = {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
-      case (name, url) if externalDependencies.contains(name) => Properties(name, processEntity(url))
-    })
+      case (name, value) if externalDependencies.contains(name) =>
+        if (value.startsWith("[")) {
+          processListEntity(value).map(Properties(name, _))
+        } else {
+          List(Properties(name, processStringEntity(value)))
+        }
+    }.flatten)
   }
 
   private def addOuterNodesToGraph(graph: Graph, properties: Properties, coreEntity: CoreEntity) = {
@@ -43,6 +48,15 @@ object CoreEntity {
     graph.`with`(outerGraphNode)
   }
 
-  private def processEntity(url: String) = url.stripPrefix("\"").stripSuffix("\"")
+  private def processStringEntity(value: String) = value.stripPrefix("\"").stripSuffix("\"")
+
+  private def processListEntity(value: String): List[String] = {
+    value
+      .stripPrefix("[").stripSuffix("]").trim
+      .split("\n")
+      .map(_.trim.stripSuffix(","))
+      .map(processStringEntity)
+      .toList
+  }
 
 }
