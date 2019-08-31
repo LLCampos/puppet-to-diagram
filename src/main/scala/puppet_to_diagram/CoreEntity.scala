@@ -48,7 +48,13 @@ object CoreEntity {
     graph.`with`(outerGraphNode)
   }
 
-  private def processStringEntity(value: String) = value.stripPrefix("\"").stripSuffix("\"")
+  private def processStringEntity(value: String) = {
+    stripUrlDetails(value.stripPrefix("\"").stripSuffix("\""))
+  }
+
+  private def stripUrlDetails(value: String) = {
+    value.split("://")(1).split(""":\d+\?""")(0)
+  }
 
   private def processListEntity(value: String): List[String] = {
     value

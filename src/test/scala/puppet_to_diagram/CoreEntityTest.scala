@@ -35,8 +35,8 @@ class CoreEntityTest extends Specification {
       val result = CoreEntity.fromJson(input, List("dependency1", "dependency2"))
 
       val expected = CoreEntity("class_name", List(
-        Properties("dependency1", "https://pinnaple.io"),
-        Properties("dependency2", "https://apples.com"),
+        Properties("dependency1", "pinnaple.io"),
+        Properties("dependency2", "apples.com"),
       ))
 
       result must be equalTo Right(expected)
@@ -55,7 +55,7 @@ class CoreEntityTest extends Specification {
             "defaults": {
               "dependency1": "\"https://pinnaple.io\"",
               "variable1": "\"bananas\"",
-              "dependency2": "[\n    \"https://apples.com\",\n    \"https://pears.co\"\n  ]"
+              "dependency2": "[\n    \"https://apples.com\",\n    \"http://pears.co\"\n  ]"
             },
             "source": "blabla"
           }
@@ -68,9 +68,9 @@ class CoreEntityTest extends Specification {
       val result = CoreEntity.fromJson(input, List("dependency1", "dependency2"))
 
       val expected = CoreEntity("class_name", List(
-        Properties("dependency1", "https://pinnaple.io"),
-        Properties("dependency2 1", "https://apples.com"),
-        Properties("dependency2 2", "https://pears.co"),
+        Properties("dependency1", "pinnaple.io"),
+        Properties("dependency2 1", "apples.com"),
+        Properties("dependency2 2", "pears.co"),
       ))
 
       result must be equalTo Right(expected)
@@ -78,20 +78,20 @@ class CoreEntityTest extends Specification {
 
     "toGraphvizGraph should generate correct graph (one core entity, two properties)" in {
       val input = CoreEntity("class_name", List(
-        Properties("dependency1", "https://pinnaple.io"),
-        Properties("dependency2", "https://apples.com"),
+        Properties("dependency1", "pinnaple.io"),
+        Properties("dependency2", "apples.com"),
       ))
 
       val mainNode = node("class_name")
         .`with`(Shape.RECTANGLE)
 
       val dependency1Node = node("dependency1")
-        .`with`(Label.html("<b>dependency1</b><br/>https://pinnaple.io"))
+        .`with`(Label.html("<b>dependency1</b><br/>pinnaple.io"))
         .`with`(Shape.RECTANGLE)
         .link(node("class_name"))
 
       val dependency2Node = node("dependency2")
-        .`with`(Label.html("<b>dependency2</b><br/>https://apples.com"))
+        .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
         .`with`(Shape.RECTANGLE)
         .link(node("class_name"))
 
