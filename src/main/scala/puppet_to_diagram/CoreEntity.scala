@@ -5,8 +5,14 @@ import guru.nidi.graphviz.model.{Graph, Node}
 import guru.nidi.graphviz.model.Factory._
 import io.circe.{ACursor, DecodingFailure, Json}
 
-case class CoreEntity(name: String, links: Seq[Properties])
-case class Properties(name: String, value: String)
+case class CoreEntity(name: String, links: Seq[Property])
+case class Property(config: PropertyConfig, showName: String, value: String)
+
+sealed trait ArrowDirection
+object In extends ArrowDirection
+object Out extends ArrowDirection
+
+case class PropertyConfig(rawName: String, arrowDirection: ArrowDirection)
 
 object CoreEntity {
   def toGraphvizGraph(coreEntity: CoreEntity): Graph = {
@@ -15,7 +21,7 @@ object CoreEntity {
     coreEntity.links.foldLeft(graphWithCoreNode)((g, n) => addOuterNodesToGraph(g, n, coreEntity))
   }
 
-  def fromJson(json: Json, propertiesToConsider: List[String]): Either[DecodingFailure, CoreEntity] = {
+  def fromJson(json: Json, propertiesToConsider: List[PropertyConfig]): Either[DecodingFailure, CoreEntity] = {
     val puppetClass = json.hcursor.downField("puppet_classes").downArray
     for {
       coreEntityName <- puppetClass.downField("name").as[String]
@@ -29,21 +35,22 @@ object CoreEntity {
   private def buildBaseGraph(coreNode: Node): Graph =
     graph().`with`(coreNode).directed()
 
-  private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, externalDependencies: List[String]): Either[DecodingFailure, Seq[Properties]] = {
+  private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, propertiesToConsider: List[PropertyConfig]): Either[DecodingFailure, Seq[Property]] = {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
-      case (name, value) if externalDependencies.contains(name) =>
+      case (name, value) if propertiesToConsider.map(_.rawName).contains(name) =>
+        val propertyConfig = propertiesToConsider.filter(_.rawName == name).head
         if (value.startsWith("[")) {
-          processListEntity(value).zipWithIndex.map { case (v, i) => Properties(s"$name ${i + 1}", v) }
+          processListEntity(value).zipWithIndex.map { case (v, i) => Property(propertyConfig, s"$name ${i + 1}", v) }
         } else {
-          List(Properties(name, processStringEntity(value)))
+          List(Property(propertyConfig, name, processStringEntity(value)))
         }
     }.flatten)
   }
 
-  private def addOuterNodesToGraph(graph: Graph, properties: Properties, coreEntity: CoreEntity) = {
-    val outerGraphNode = node(properties.name)
+  private def addOuterNodesToGraph(graph: Graph, properties: Property, coreEntity: CoreEntity) = {
+    val outerGraphNode = node(properties.showName)
       .link(node(coreEntity.name))
-      .`with`(Label.html(s"<b>${properties.name}</b><br/>${properties.value}"))
+      .`with`(Label.html(s"<b>${properties.showName}</b><br/>${properties.value}"))
       .`with`(Shape.RECTANGLE)
     graph.`with`(outerGraphNode)
   }
