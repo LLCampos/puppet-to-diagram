@@ -1,9 +1,6 @@
 package puppet_to_diagram
 
-import java.io.File
-
 import guru.nidi.graphviz.attribute.{Label, Shape}
-import guru.nidi.graphviz.engine.{Format, Graphviz}
 import guru.nidi.graphviz.model.Factory._
 import io.circe.literal._
 import org.specs2.mutable.Specification
@@ -35,11 +32,11 @@ class CentralNodeTest extends Specification {
         ]
       }
       """
-      val result = CentralNode.fromJson(input, List("dependency1", "dependency2"))
+      val result = CoreEntity.fromJson(input, List("dependency1", "dependency2"))
 
-      val expected = CentralNode("class_name", List(
-        OuterNode("dependency1", "https://pinnaple.io"),
-        OuterNode("dependency2", "https://apples.com"),
+      val expected = CoreEntity("class_name", List(
+        Properties("dependency1", "https://pinnaple.io"),
+        Properties("dependency2", "https://apples.com"),
       ))
 
       result must be equalTo Right(expected)
@@ -68,21 +65,21 @@ class CentralNodeTest extends Specification {
         ]
       }
       """
-      val result = CentralNode.fromJson(input, List("dependency1", "dependency2"))
+      val result = CoreEntity.fromJson(input, List("dependency1", "dependency2"))
 
-      val expected = CentralNode("class_name", List(
-        OuterNode("dependency1", "https://pinnaple.io"),
-        OuterNode("dependency2", "https://apples.com"),
-        OuterNode("dependency2", "https://pears.co"),
+      val expected = CoreEntity("class_name", List(
+        Properties("dependency1", "https://pinnaple.io"),
+        Properties("dependency2", "https://apples.com"),
+        Properties("dependency2", "https://pears.co"),
       ))
 
       result must be equalTo Right(expected)
     }.pendingUntilFixed("todo later")
 
     "toGraphvizGraph should generate correct graph" in {
-      val input = CentralNode("class_name", List(
-        OuterNode("dependency1", "https://pinnaple.io"),
-        OuterNode("dependency2", "https://apples.com"),
+      val input = CoreEntity("class_name", List(
+        Properties("dependency1", "https://pinnaple.io"),
+        Properties("dependency2", "https://apples.com"),
       ))
 
       val mainNode = node("class_name")
@@ -104,7 +101,7 @@ class CentralNodeTest extends Specification {
         dependency2Node,
       )
 
-      val result = CentralNode.toGraphvizGraph(input)
+      val result = CoreEntity.toGraphvizGraph(input)
 
       GraphPrinter.createFile(result, "result.png")
       GraphPrinter.createFile(expected, "expected.png")
