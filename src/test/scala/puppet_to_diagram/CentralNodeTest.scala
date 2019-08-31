@@ -1,8 +1,8 @@
-package model
+package puppet_to_diagram
 
 import java.io.File
 
-import guru.nidi.graphviz.attribute.Label
+import guru.nidi.graphviz.attribute.{Label, Shape}
 import guru.nidi.graphviz.engine.{Format, Graphviz}
 import guru.nidi.graphviz.model.Factory._
 import io.circe.literal._
@@ -86,13 +86,16 @@ class CentralNodeTest extends Specification {
       ))
 
       val mainNode = node("class_name")
+        .`with`(Shape.RECTANGLE)
 
       val dependency1Node = node("dependency1")
         .`with`(Label.html("<b>dependency1</b><br/>https://pinnaple.io"))
+        .`with`(Shape.RECTANGLE)
         .link(node("class_name"))
 
       val dependency2Node = node("dependency2")
         .`with`(Label.html("<b>dependency2</b><br/>https://apples.com"))
+        .`with`(Shape.RECTANGLE)
         .link(node("class_name"))
 
       val expected = graph.`with`(
@@ -103,9 +106,8 @@ class CentralNodeTest extends Specification {
 
       val result = CentralNode.toGraphvizGraph(input)
 
-      Graphviz.fromGraph(result).render(Format.PNG).toFile(new File("result.png"))
-      Graphviz.fromGraph(expected).render(Format.PNG).toFile(new File("expected.png"))
-
+      GraphPrinter.createFile(result, "result.png")
+      GraphPrinter.createFile(expected, "expected.png")
       result must be equalTo expected
       ok
     }
