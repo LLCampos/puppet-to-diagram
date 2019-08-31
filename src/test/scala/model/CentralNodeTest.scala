@@ -2,10 +2,11 @@ package model
 
 import java.io.File
 
+import guru.nidi.graphviz.attribute.Label
 import guru.nidi.graphviz.engine.{Format, Graphviz}
-import org.specs2.mutable.Specification
-import io.circe.literal._
 import guru.nidi.graphviz.model.Factory._
+import io.circe.literal._
+import org.specs2.mutable.Specification
 
 
 class CentralNodeTest extends Specification {
@@ -84,18 +85,28 @@ class CentralNodeTest extends Specification {
         OuterNode("dependency2", "https://apples.com"),
       ))
 
+      val mainNode = node("class_name")
+
+      val dependency1Node = node("dependency1")
+        .`with`(Label.html("<b>dependency1</b><br/>https://pinnaple.io"))
+        .link(node("class_name"))
+
+      val dependency2Node = node("dependency2")
+        .`with`(Label.html("<b>dependency2</b><br/>https://apples.com"))
+        .link(node("class_name"))
+
       val expected = graph.`with`(
-        node("class_name"),
-        node("dependency1").link(node("class_name")),
-        node("dependency2").link(node("class_name")),
+        mainNode,
+        dependency1Node,
+        dependency2Node,
       )
 
       val result = CentralNode.toGraphvizGraph(input)
 
-      result must be equalTo expected
-
       Graphviz.fromGraph(result).render(Format.PNG).toFile(new File("result.png"))
-      Graphviz.fromGraph(result).render(Format.PNG).toFile(new File("expected.png"))
+      Graphviz.fromGraph(expected).render(Format.PNG).toFile(new File("expected.png"))
+
+      result must be equalTo expected
       ok
     }
 

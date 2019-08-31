@@ -1,5 +1,6 @@
 package model
 
+import guru.nidi.graphviz.attribute.Label
 import guru.nidi.graphviz.model.Graph
 import guru.nidi.graphviz.model.Factory._
 import io.circe.{ACursor, DecodingFailure, Json}
@@ -11,7 +12,7 @@ object CentralNode {
   def toGraphvizGraph(centralNode: CentralNode): Graph = {
     val graphCentralNode = node(centralNode.name)
     val graphWithCentralNode = graph().`with`(graphCentralNode)
-    centralNode.links.foldLeft(graphWithCentralNode)((g, n) => g.`with`(node(n.name).link(node(centralNode.name))))
+    centralNode.links.foldLeft(graphWithCentralNode)((g, n) => addOuterNodeToGraphWithCentralNode(g, n, centralNode))
   }
 
   def fromJson(json: Json, externalDependencies: List[String]): Either[DecodingFailure, CentralNode] = {
@@ -26,6 +27,13 @@ object CentralNode {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
       case (name, url) if externalDependencies.contains(name) => OuterNode(name, processUrl(url))
     })
+  }
+
+  private def addOuterNodeToGraphWithCentralNode(graph: Graph, outerNode: OuterNode, centralNode: CentralNode) = {
+    val outerGraphNode = node(outerNode.name)
+      .link(node(centralNode.name))
+      .`with`(Label.html(s"<b>${outerNode.name}</b><br/>${outerNode.url}"))
+    graph.`with`(outerGraphNode)
   }
 
   private def processUrl(url: String) = url.stripPrefix("\"").stripSuffix("\"")
