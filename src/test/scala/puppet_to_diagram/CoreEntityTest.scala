@@ -69,14 +69,14 @@ class CoreEntityTest extends Specification {
 
       val expected = CoreEntity("class_name", List(
         Properties("dependency1", "https://pinnaple.io"),
-        Properties("dependency2", "https://apples.com"),
-        Properties("dependency2", "https://pears.co"),
+        Properties("dependency2 1", "https://apples.com"),
+        Properties("dependency2 2", "https://pears.co"),
       ))
 
       result must be equalTo Right(expected)
     }
 
-    "toGraphvizGraph should generate correct graph" in {
+    "toGraphvizGraph should generate correct graph (one core entity, two properties)" in {
       val input = CoreEntity("class_name", List(
         Properties("dependency1", "https://pinnaple.io"),
         Properties("dependency2", "https://apples.com"),

@@ -33,7 +33,7 @@ object CoreEntity {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
       case (name, value) if externalDependencies.contains(name) =>
         if (value.startsWith("[")) {
-          processListEntity(value).map(Properties(name, _))
+          processListEntity(value).zipWithIndex.map { case (v, i) => Properties(s"$name ${i + 1}", v) }
         } else {
           List(Properties(name, processStringEntity(value)))
         }
