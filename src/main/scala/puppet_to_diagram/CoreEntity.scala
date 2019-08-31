@@ -10,8 +10,8 @@ case class Properties(name: String, value: String)
 
 object CoreEntity {
   def toGraphvizGraph(coreEntity: CoreEntity): Graph = {
-    val graphCoreNode = buildCoreNode(coreEntity)
-    val graphWithCoreNode = graph().`with`(graphCoreNode)
+    val coreNode = buildCoreNode(coreEntity)
+    val graphWithCoreNode = buildBaseGraph(coreNode)
     coreEntity.links.foldLeft(graphWithCoreNode)((g, n) => addOuterNodesToGraph(g, n, coreEntity))
   }
 
@@ -25,6 +25,9 @@ object CoreEntity {
 
   private def buildCoreNode(centralNode: CoreEntity): Node =
     node(centralNode.name).`with`(Shape.RECTANGLE)
+
+  private def buildBaseGraph(coreNode: Node): Graph =
+    graph().`with`(coreNode).directed()
 
   private def defaultsCursorToOuterNodes(defaultsCursor: ACursor, externalDependencies: List[String]): Either[DecodingFailure, Seq[Properties]] = {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {

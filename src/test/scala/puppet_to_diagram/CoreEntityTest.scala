@@ -6,9 +6,9 @@ import io.circe.literal._
 import org.specs2.mutable.Specification
 
 
-class CentralNodeTest extends Specification {
+class CoreEntityTest extends Specification {
 
-  "CentralNode" should {
+  "CoreEntity" should {
     "fromJson should generate correct object from simple JSON" in {
       val input = json"""{
         "puppet_classes": [
@@ -99,7 +99,7 @@ class CentralNodeTest extends Specification {
         mainNode,
         dependency1Node,
         dependency2Node,
-      )
+      ).directed()
 
       val result = CoreEntity.toGraphvizGraph(input)
 
