@@ -1,6 +1,6 @@
 package puppet_to_diagram
 
-import guru.nidi.graphviz.attribute.{Label, Shape}
+import guru.nidi.graphviz.attribute.{Color, Label, Shape, Style}
 import guru.nidi.graphviz.model.{Graph, Node}
 import guru.nidi.graphviz.model.Factory._
 import io.circe.{ACursor, DecodingFailure, Json}
@@ -17,6 +17,9 @@ case class CoreNodeData(coreEntity: CoreEntity, node: Node, links: Seq[PropertyN
 case class PropertyNodeData(property: Property, node: Node)
 
 object CoreEntity {
+  val ColorCoreNode: Color = Color.rgb("FFE5CC")
+  val ColorPropertyNodes: Color = Color.rgb("D0F0FD")
+
   def toGraphvizGraph(coreEntity: CoreEntity): Graph = {
     val coreNodeData = coreEntityToCoreNodeData(coreEntity)
     buildGraph(coreNodeData)
@@ -43,22 +46,30 @@ object CoreEntity {
     coreEntity.links.map(p => PropertyNodeData(p, buildPropertyNode(p, coreEntity)))
 
   private def buildPropertyNode(property: Property, coreEntity: CoreEntity): Node = {
-    val propertyNode = node(property.showName).`with`(buildNodeLabelForProperty(property))
+    val propertyNode = prettifyPropertyNode(node(property.showName), property)
     if (property.config.arrowDirection == Out)
         propertyNode.link(node(coreEntity.name))
     else
         propertyNode
   }
 
+  private def prettifyPropertyNode(node: Node, property: Property) =
+    node
+      .`with`(buildNodeLabelForProperty(property))
+      .`with`(Style.FILLED, ColorPropertyNodes)
+
   private def buildNodeLabelForProperty(property: Property) = {
     Label.html(s"<b>${property.showName}</b><br/>${property.value}")
   }
 
   private def buildCoreNode(coreEntity: CoreEntity, propertyNodeDatas: Seq[PropertyNodeData]): Node = {
-    val baseNode = node(coreEntity.name)
+    val baseNode = prettifyCoreNode(node(coreEntity.name))
     propertyNodeDatas.filter(_.property.config.arrowDirection == In)
       .foldLeft(baseNode)((n, p) => n.link(p.node))
   }
+
+  private def prettifyCoreNode(node: Node): Node =
+    node.`with`(Style.FILLED, ColorCoreNode)
 
   def fromJson(json: Json, propertiesToConsider: List[PropertyConfig]): Either[DecodingFailure, CoreEntity] = {
     val puppetClass = json.hcursor.downField("puppet_classes").downArray

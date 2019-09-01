@@ -1,6 +1,6 @@
 package puppet_to_diagram
 
-import guru.nidi.graphviz.attribute.{Label, Shape}
+import guru.nidi.graphviz.attribute.{Color, Label, Shape, Style}
 import guru.nidi.graphviz.model.Factory._
 import io.circe.literal._
 import org.specs2.mutable.Specification
@@ -99,13 +99,16 @@ class CoreEntityTest extends Specification {
 
       val dependency2Node = node("Dependency 2")
         .`with`(Label.html("<b>Dependency 2</b><br/>apples.com"))
+        .`with`(Style.FILLED, Color.rgb("D0F0FD"))
 
       val mainNode = node("class_name")
         .link(dependency2Node)
+        .`with`(Style.FILLED, Color.rgb("FFE5CC"))
 
       val dependency1Node = node("Dependency 1")
         .`with`(Label.html("<b>Dependency 1</b><br/>pinnaple.io"))
         .link(mainNode)
+        .`with`(Style.FILLED, Color.rgb("D0F0FD"))
 
       val expected = graph.`with`(
         mainNode,
