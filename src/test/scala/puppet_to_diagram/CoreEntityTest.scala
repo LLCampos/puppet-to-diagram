@@ -97,24 +97,34 @@ class CoreEntityTest extends Specification {
         Property(propertyConfig2, "dependency2", "apples.com"),
       ))
 
+//      val dependency2Node = node("dependency2")
+//        .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
+//        .`with`(Shape.RECTANGLE)
+//
+//      val mainNode = node("class_name")
+//        .`with`(Shape.RECTANGLE)
+//        .link(dependency2Node)
+//
+//      val dependency1Node = node("dependency1")
+//        .`with`(Label.html("<b>dependency1</b><br/>pinnaple.io"))
+//        .`with`(Shape.RECTANGLE)
+//        .link(mainNode)
+
       val mainNode = node("class_name")
-        .`with`(Shape.RECTANGLE)
 
       val dependency1Node = node("dependency1")
         .`with`(Label.html("<b>dependency1</b><br/>pinnaple.io"))
-        .`with`(Shape.RECTANGLE)
         .link(mainNode)
 
       val dependency2Node = node("dependency2")
         .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
-        .`with`(Shape.RECTANGLE)
         .link(mainNode)
 
       val expected = graph.`with`(
         mainNode,
         dependency1Node,
         dependency2Node,
-      ).directed()
+      ).directed().nodeAttr().`with`(Shape.RECTANGLE)
 
       val result = CoreEntity.toGraphvizGraph(input)
 

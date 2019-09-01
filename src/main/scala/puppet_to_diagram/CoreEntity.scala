@@ -7,19 +7,46 @@ import io.circe.{ACursor, DecodingFailure, Json}
 
 case class CoreEntity(name: String, links: Seq[Property])
 case class Property(config: PropertyConfig, showName: String, value: String)
+case class PropertyConfig(rawName: String, arrowDirection: ArrowDirection)
 
 sealed trait ArrowDirection
 object In extends ArrowDirection
 object Out extends ArrowDirection
 
-case class PropertyConfig(rawName: String, arrowDirection: ArrowDirection)
+case class CoreNodeData(coreEntity: CoreEntity, node: Node, links: Seq[PropertyNodeData])
+case class PropertyNodeData(property: Property, node: Node)
 
 object CoreEntity {
   def toGraphvizGraph(coreEntity: CoreEntity): Graph = {
-    val coreNode = buildCoreNode(coreEntity)
-    val graphWithCoreNode = buildBaseGraph(coreNode)
-    coreEntity.links.foldLeft(graphWithCoreNode)((g, n) => addOuterNodesToGraph(g, n, coreEntity))
+    val coreNodeData = coreEntityToCoreNodeData(coreEntity)
+    buildGraph(coreNodeData)
   }
+
+  private def buildGraph(coreNodeData: CoreNodeData): Graph = {
+    val baseGraph = buildBaseGraph(coreNodeData)
+    coreNodeData.links.foldLeft(baseGraph)((g, n) => g.`with`(n.node))
+  }
+
+  private def buildBaseGraph(coreNodeData: CoreNodeData): Graph =
+    graph().`with`(coreNodeData.node).directed().nodeAttr().`with`(Shape.RECTANGLE)
+
+  private def coreEntityToCoreNodeData(coreEntity: CoreEntity): CoreNodeData =
+    CoreNodeData(
+      coreEntity,
+      buildCoreNode(coreEntity),
+      buildPropertyNodeDatas(coreEntity)
+    )
+
+  private def buildPropertyNodeDatas(coreEntity: CoreEntity): Seq[PropertyNodeData] =
+    coreEntity.links.map(p => PropertyNodeData(p, buildPropertyNode(p, coreEntity)))
+
+  private def buildPropertyNode(property: Property, coreEntity: CoreEntity): Node =
+    node(property.showName)
+      .link(node(coreEntity.name))
+      .`with`(Label.html(s"<b>${property.showName}</b><br/>${property.value}"))
+
+  private def buildCoreNode(centralNode: CoreEntity): Node =
+    node(centralNode.name)
 
   def fromJson(json: Json, propertiesToConsider: List[PropertyConfig]): Either[DecodingFailure, CoreEntity] = {
     val puppetClass = json.hcursor.downField("puppet_classes").downArray
@@ -28,12 +55,6 @@ object CoreEntity {
       properties <- extractPropertiesFromDefaultsCursor(puppetClass.downField("defaults"), propertiesToConsider)
     } yield CoreEntity(coreEntityName, properties)
   }
-
-  private def buildCoreNode(centralNode: CoreEntity): Node =
-    node(centralNode.name).`with`(Shape.RECTANGLE)
-
-  private def buildBaseGraph(coreNode: Node): Graph =
-    graph().`with`(coreNode).directed()
 
   private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, propertiesToConsider: List[PropertyConfig]): Either[DecodingFailure, Seq[Property]] = {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
@@ -45,14 +66,6 @@ object CoreEntity {
           List(Property(propertyConfig, name, processStringEntity(value)))
         }
     }.flatten)
-  }
-
-  private def addOuterNodesToGraph(graph: Graph, properties: Property, coreEntity: CoreEntity) = {
-    val outerGraphNode = node(properties.showName)
-      .link(node(coreEntity.name))
-      .`with`(Label.html(s"<b>${properties.showName}</b><br/>${properties.value}"))
-      .`with`(Shape.RECTANGLE)
-    graph.`with`(outerGraphNode)
   }
 
   private def processStringEntity(value: String) = {
