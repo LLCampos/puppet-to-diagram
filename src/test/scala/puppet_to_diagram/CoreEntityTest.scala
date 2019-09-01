@@ -32,8 +32,8 @@ class CoreEntityTest extends Specification {
         ]
       }
       """
-      val propertyConfig1 = PropertyConfig("dependency1", In)
-      val propertyConfig2 = PropertyConfig("dependency2", Out)
+      val propertyConfig1 = PropertyConfig("dependency1", "Dependency 1", In)
+      val propertyConfig2 = PropertyConfig("dependency2", "Dependency 2", Out)
 
       val result = CoreEntity.fromJson(input, List(
         propertyConfig1,
@@ -41,8 +41,8 @@ class CoreEntityTest extends Specification {
       ))
 
       val expected = CoreEntity("class_name", List(
-        Property(propertyConfig1, "dependency1", "pinnaple.io"),
-        Property(propertyConfig2, "dependency2", "apples.com"),
+        Property(propertyConfig1, "Dependency 1", "pinnaple.io"),
+        Property(propertyConfig2, "Dependency 2", "apples.com"),
       ))
 
       result must be equalTo Right(expected)
@@ -71,8 +71,8 @@ class CoreEntityTest extends Specification {
         ]
       }
       """
-      val propertyConfig1 = PropertyConfig("dependency1", In)
-      val propertyConfig2 = PropertyConfig("dependency2", Out)
+      val propertyConfig1 = PropertyConfig("dependency1", "Dependency 1", In)
+      val propertyConfig2 = PropertyConfig("dependency2", "Dependency 2", Out)
 
       val result = CoreEntity.fromJson(input, List(
         propertyConfig1,
@@ -80,31 +80,31 @@ class CoreEntityTest extends Specification {
       ))
 
       val expected = CoreEntity("class_name", List(
-        Property(propertyConfig1, "dependency1", "pinnaple.io"),
-        Property(propertyConfig2, "dependency2 1", "apples.com"),
-        Property(propertyConfig2, "dependency2 2", "pears.co"),
+        Property(propertyConfig1, "Dependency 1", "pinnaple.io"),
+        Property(propertyConfig2, "Dependency 2 1", "apples.com"),
+        Property(propertyConfig2, "Dependency 2 2", "pears.co"),
       ))
 
       result must be equalTo Right(expected)
     }
 
     "toGraphvizGraph should generate correct graph (one core entity, two properties)" in {
-      val propertyConfig1 = PropertyConfig("dependency1", Out)
-      val propertyConfig2 = PropertyConfig("dependency2", In)
+      val propertyConfig1 = PropertyConfig("dependency1", "Dependency 1", Out)
+      val propertyConfig2 = PropertyConfig("dependency2", "Dependency 2", In)
 
       val input = CoreEntity("class_name", List(
-        Property(propertyConfig1, "dependency1", "pinnaple.io"),
-        Property(propertyConfig2, "dependency2", "apples.com"),
+        Property(propertyConfig1, "Dependency 1", "pinnaple.io"),
+        Property(propertyConfig2, "Dependency 2", "apples.com"),
       ))
 
-      val dependency2Node = node("dependency2")
-        .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
+      val dependency2Node = node("Dependency 2")
+        .`with`(Label.html("<b>Dependency 2</b><br/>apples.com"))
 
       val mainNode = node("class_name")
         .link(dependency2Node)
 
-      val dependency1Node = node("dependency1")
-        .`with`(Label.html("<b>dependency1</b><br/>pinnaple.io"))
+      val dependency1Node = node("Dependency 1")
+        .`with`(Label.html("<b>Dependency 1</b><br/>pinnaple.io"))
         .link(mainNode)
 
       val expected = graph.`with`(

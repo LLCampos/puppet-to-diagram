@@ -7,7 +7,7 @@ import io.circe.{ACursor, DecodingFailure, Json}
 
 case class CoreEntity(name: String, links: Seq[Property])
 case class Property(config: PropertyConfig, showName: String, value: String)
-case class PropertyConfig(rawName: String, arrowDirection: ArrowDirection)
+case class PropertyConfig(rawName: String, prettyName: String, arrowDirection: ArrowDirection)
 
 sealed trait ArrowDirection
 object In extends ArrowDirection
@@ -72,10 +72,11 @@ object CoreEntity {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
       case (name, value) if propertiesToConsider.map(_.rawName).contains(name) =>
         val propertyConfig = propertiesToConsider.filter(_.rawName == name).head
+        val showName = propertyConfig.prettyName
         if (value.startsWith("[")) {
-          processListEntity(value).zipWithIndex.map { case (v, i) => Property(propertyConfig, s"$name ${i + 1}", v) }
+          processListEntity(value).zipWithIndex.map { case (v, i) => Property(propertyConfig, s"$showName ${i + 1}", v) }
         } else {
-          List(Property(propertyConfig, name, processStringEntity(value)))
+          List(Property(propertyConfig, showName, processStringEntity(value)))
         }
     }.flatten)
   }
