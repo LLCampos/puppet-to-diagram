@@ -89,35 +89,22 @@ class CoreEntityTest extends Specification {
     }
 
     "toGraphvizGraph should generate correct graph (one core entity, two properties)" in {
-      val propertyConfig1 = PropertyConfig("dependency1", In)
-      val propertyConfig2 = PropertyConfig("dependency2", Out)
+      val propertyConfig1 = PropertyConfig("dependency1", Out)
+      val propertyConfig2 = PropertyConfig("dependency2", In)
 
       val input = CoreEntity("class_name", List(
         Property(propertyConfig1, "dependency1", "pinnaple.io"),
         Property(propertyConfig2, "dependency2", "apples.com"),
       ))
 
-//      val dependency2Node = node("dependency2")
-//        .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
-//        .`with`(Shape.RECTANGLE)
-//
-//      val mainNode = node("class_name")
-//        .`with`(Shape.RECTANGLE)
-//        .link(dependency2Node)
-//
-//      val dependency1Node = node("dependency1")
-//        .`with`(Label.html("<b>dependency1</b><br/>pinnaple.io"))
-//        .`with`(Shape.RECTANGLE)
-//        .link(mainNode)
+      val dependency2Node = node("dependency2")
+        .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
 
       val mainNode = node("class_name")
+        .link(dependency2Node)
 
       val dependency1Node = node("dependency1")
         .`with`(Label.html("<b>dependency1</b><br/>pinnaple.io"))
-        .link(mainNode)
-
-      val dependency2Node = node("dependency2")
-        .`with`(Label.html("<b>dependency2</b><br/>apples.com"))
         .link(mainNode)
 
       val expected = graph.`with`(

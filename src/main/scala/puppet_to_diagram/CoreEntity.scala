@@ -30,23 +30,35 @@ object CoreEntity {
   private def buildBaseGraph(coreNodeData: CoreNodeData): Graph =
     graph().`with`(coreNodeData.node).directed().nodeAttr().`with`(Shape.RECTANGLE)
 
-  private def coreEntityToCoreNodeData(coreEntity: CoreEntity): CoreNodeData =
+  private def coreEntityToCoreNodeData(coreEntity: CoreEntity): CoreNodeData = {
+    val propertyNodeDatas = buildPropertyNodeDatas(coreEntity)
     CoreNodeData(
       coreEntity,
-      buildCoreNode(coreEntity),
-      buildPropertyNodeDatas(coreEntity)
+      buildCoreNode(coreEntity, propertyNodeDatas),
+      propertyNodeDatas
     )
+  }
 
   private def buildPropertyNodeDatas(coreEntity: CoreEntity): Seq[PropertyNodeData] =
     coreEntity.links.map(p => PropertyNodeData(p, buildPropertyNode(p, coreEntity)))
 
-  private def buildPropertyNode(property: Property, coreEntity: CoreEntity): Node =
-    node(property.showName)
-      .link(node(coreEntity.name))
-      .`with`(Label.html(s"<b>${property.showName}</b><br/>${property.value}"))
+  private def buildPropertyNode(property: Property, coreEntity: CoreEntity): Node = {
+    val propertyNode = node(property.showName).`with`(buildNodeLabelForProperty(property))
+    if (property.config.arrowDirection == Out)
+        propertyNode.link(node(coreEntity.name))
+    else
+        propertyNode
+  }
 
-  private def buildCoreNode(centralNode: CoreEntity): Node =
-    node(centralNode.name)
+  private def buildNodeLabelForProperty(property: Property) = {
+    Label.html(s"<b>${property.showName}</b><br/>${property.value}")
+  }
+
+  private def buildCoreNode(coreEntity: CoreEntity, propertyNodeDatas: Seq[PropertyNodeData]): Node = {
+    val baseNode = node(coreEntity.name)
+    propertyNodeDatas.filter(_.property.config.arrowDirection == In)
+      .foldLeft(baseNode)((n, p) => n.link(p.node))
+  }
 
   def fromJson(json: Json, propertiesToConsider: List[PropertyConfig]): Either[DecodingFailure, CoreEntity] = {
     val puppetClass = json.hcursor.downField("puppet_classes").downArray
