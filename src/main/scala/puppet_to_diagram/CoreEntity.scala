@@ -4,16 +4,16 @@ import guru.nidi.graphviz.attribute.{Color, Label, Shape, Style}
 import guru.nidi.graphviz.model.Factory._
 import guru.nidi.graphviz.model.{Graph, Node}
 
-case class CoreEntity(name: String, links: Seq[Property])
-case class Property(config: PropertyConfig, showName: String, value: String)
-case class PropertyConfig(rawName: String, prettyName: String, arrowDirection: ArrowDirection)
+case class CoreEntity(name: String, links: Seq[Parameter])
+case class Parameter(config: ParameterConfig, showName: String, value: String)
+case class ParameterConfig(rawName: String, prettyName: String, arrowDirection: ArrowDirection)
 
 sealed trait ArrowDirection
 object In extends ArrowDirection
 object Out extends ArrowDirection
 
-case class CoreNodeData(coreEntity: CoreEntity, node: Node, links: Seq[PropertyNodeData])
-case class PropertyNodeData(property: Property, node: Node)
+case class CoreNodeData(coreEntity: CoreEntity, node: Node, links: Seq[ParameterNodeData])
+case class ParameterNodeData(parameter: Parameter, node: Node)
 
 object CoreEntity {
   val ColorCoreNode: Color = Color.rgb("FFE5CC")
@@ -33,37 +33,37 @@ object CoreEntity {
     graph().`with`(coreNodeData.node).directed().nodeAttr().`with`(Shape.RECTANGLE)
 
   private def coreEntityToCoreNodeData(coreEntity: CoreEntity): CoreNodeData = {
-    val propertyNodeDatas = buildPropertyNodeDatas(coreEntity)
+    val parameterNodeDatas = buildPropertyNodeDatas(coreEntity)
     CoreNodeData(
       coreEntity,
-      buildCoreNode(coreEntity, propertyNodeDatas),
-      propertyNodeDatas
+      buildCoreNode(coreEntity, parameterNodeDatas),
+      parameterNodeDatas
     )
   }
 
-  private def buildPropertyNodeDatas(coreEntity: CoreEntity): Seq[PropertyNodeData] =
-    coreEntity.links.map(p => PropertyNodeData(p, buildPropertyNode(p, coreEntity)))
+  private def buildPropertyNodeDatas(coreEntity: CoreEntity): Seq[ParameterNodeData] =
+    coreEntity.links.map(p => ParameterNodeData(p, buildPropertyNode(p, coreEntity)))
 
-  private def buildPropertyNode(property: Property, coreEntity: CoreEntity): Node = {
-    val propertyNode = prettifyPropertyNode(node(property.showName), property)
-    if (property.config.arrowDirection == Out)
-        propertyNode.link(node(coreEntity.name))
+  private def buildPropertyNode(parameter: Parameter, coreEntity: CoreEntity): Node = {
+    val parameterNode = prettifyPropertyNode(node(parameter.showName), parameter)
+    if (parameter.config.arrowDirection == Out)
+        parameterNode.link(node(coreEntity.name))
     else
-        propertyNode
+        parameterNode
   }
 
-  private def prettifyPropertyNode(node: Node, property: Property) =
+  private def prettifyPropertyNode(node: Node, parameter: Parameter) =
     node
-      .`with`(buildNodeLabelForProperty(property))
+      .`with`(buildNodeLabelForProperty(parameter))
       .`with`(Style.FILLED, ColorPropertyNodes)
 
-  private def buildNodeLabelForProperty(property: Property) = {
-    Label.html(s"<b>${property.showName}</b><br/>${property.value}")
+  private def buildNodeLabelForProperty(parameter: Parameter) = {
+    Label.html(s"<b>${parameter.showName}</b><br/>${parameter.value}")
   }
 
-  private def buildCoreNode(coreEntity: CoreEntity, propertyNodeDatas: Seq[PropertyNodeData]): Node = {
+  private def buildCoreNode(coreEntity: CoreEntity, parameterNodeDatas: Seq[ParameterNodeData]): Node = {
     val baseNode = prettifyCoreNode(node(coreEntity.name))
-    propertyNodeDatas.filter(_.property.config.arrowDirection == In)
+    parameterNodeDatas.filter(_.parameter.config.arrowDirection == In)
       .foldLeft(baseNode)((n, p) => n.link(p.node))
   }
 

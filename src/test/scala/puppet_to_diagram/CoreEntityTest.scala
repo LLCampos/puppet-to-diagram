@@ -9,12 +9,12 @@ class CoreEntityTest extends Specification {
 
   "CoreEntity" should {
     "toGraphvizGraph should generate correct graph (one core entity, two properties)" in {
-      val propertyConfig1 = PropertyConfig("dependency1", "Dependency 1", Out)
-      val propertyConfig2 = PropertyConfig("dependency2", "Dependency 2", In)
+      val propertyConfig1 = ParameterConfig("dependency1", "Dependency 1", Out)
+      val propertyConfig2 = ParameterConfig("dependency2", "Dependency 2", In)
 
       val input = CoreEntity("class_name", List(
-        Property(propertyConfig1, "Dependency 1", "pinnaple.io"),
-        Property(propertyConfig2, "Dependency 2", "apples.com"),
+        Parameter(propertyConfig1, "Dependency 1", "pinnaple.io"),
+        Parameter(propertyConfig2, "Dependency 2", "apples.com"),
       ))
 
       val dependency2Node = node("Dependency 2")
