@@ -2,19 +2,21 @@ package puppet_to_diagram
 
 import io.circe.{ACursor, DecodingFailure, Json}
 
+case class PuppetClass(name: String, definition: Json)
+
 object PuppetParser {
-  def generateCoreEntityFromPuppetClassJson(json: Json, parametersToConsider: List[ParameterConfig]): Either[DecodingFailure, CoreEntity] = {
-    val puppetClass = json.hcursor.downField("puppet_classes").downArray
+  def generateCoreEntityFromPuppetClassJson(puppetClassJson: Json, parametersToRepresent: List[ParameterConfig]): Either[DecodingFailure, CoreEntity] = {
+    val puppetClass = puppetClassJson.hcursor.downField("puppet_classes").downArray
     for {
       coreEntityName <- puppetClass.downField("name").as[String]
-      parameters <- extractPropertiesFromDefaultsCursor(puppetClass.downField("defaults"), parametersToConsider)
+      parameters <- extractPropertiesFromDefaultsCursor(puppetClass.downField("defaults"), parametersToRepresent)
     } yield CoreEntity(coreEntityName, parameters)
   }
 
-  private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, parametersToConsider: List[ParameterConfig]): Either[DecodingFailure, Seq[Parameter]] = {
+  private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, parametersToRepresent: List[ParameterConfig]): Either[DecodingFailure, Seq[Parameter]] = {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
-      case (name, value) if parametersToConsider.map(_.rawName).contains(name) =>
-        val parameterConfig = parametersToConsider.filter(_.rawName == name).head
+      case (name, value) if parametersToRepresent.map(_.rawName).contains(name) =>
+        val parameterConfig = parametersToRepresent.filter(_.rawName == name).head
         val showName = parameterConfig.prettyName
         if (value.startsWith("[")) {
           processListEntity(value).zipWithIndex.map { case (v, i) => Parameter(parameterConfig, s"$showName ${i + 1}", v) }
@@ -41,20 +43,18 @@ object PuppetParser {
       .toList
   }
 
-  // TODO: Class to consider and class definition should be joined in one class?
-  def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, classToConsider: String, classDefinition: Json, parametersToConsider: List[ParameterConfig]
+  def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
   ): Either[DecodingFailure, CoreEntity] = {
-    val hieraProperties = extractHieraParametersForClass(hieraPuppetNode, classToConsider, parametersToConsider)
-    val coreEntity = generateCoreEntityFromPuppetClassJson(classDefinition, parametersToConsider)
+    val hieraProperties = extractHieraParametersForClass(hieraPuppetNode, puppetClassToRepresent.name, parametersToRepresent)
+    val coreEntity = generateCoreEntityFromPuppetClassJson(puppetClassToRepresent.definition, parametersToRepresent)
     coreEntity.map(overrideProperties(_, hieraProperties))
   }
 
-  private def extractHieraParametersForClass(hieraJson: Json, classToConsider: String, parametersToConsider: List[ParameterConfig]): Map[String, String] = {
-    parametersToConsider.map(p => {
-      val hieraParameter = generateHieraParameter(classToConsider, p.rawName)
+  private def extractHieraParametersForClass(hieraJson: Json, classToRepresent: String, parametersToRepresent: List[ParameterConfig]): Map[String, String] =
+    parametersToRepresent.map(p => {
+      val hieraParameter = generateHieraParameter(classToRepresent, p.rawName)
       p.rawName -> getValueFromJson(hieraJson, hieraParameter)
     }).toMap.filter(_._2.isDefined).mapValues(_.get)
-  }
 
   private def generateHieraParameter(className: String, parameterName: String) =
     s"$className::$parameterName"

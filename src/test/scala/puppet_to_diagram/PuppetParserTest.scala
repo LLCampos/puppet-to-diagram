@@ -121,7 +121,8 @@ class PuppetParserTest extends Specification {
 
     val hieraNodeJson = yamlParser.parse(hieraNodeYaml).right.get
 
-    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeJson(hieraNodeJson, "class_name", classJson, List(
+    val puppetClass = PuppetClass("class_name", classJson)
+    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeJson(hieraNodeJson, puppetClass, List(
       parameterConfig1,
       parameterConfig2
     ))
@@ -136,5 +137,5 @@ class PuppetParserTest extends Specification {
   }
 
   // TODO
-  "generateCoreEntityFromHieraPuppetNodeJson should generate correct entity from Hiera Puppet Node and class definition (hiera with list values)"
+  //"generateCoreEntityFromHieraPuppetNodeJson should generate correct entity from Hiera Puppet Node and class definition (hiera with list values)"
 }
