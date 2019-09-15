@@ -50,7 +50,7 @@ class CoreEntityTest extends Specification {
 
       val input = CoreEntity("class_name", List(
         Parameter(propertyConfig1, "Dependency 1", ParameterString("pinnaple.io")),
-        Parameter(propertyConfig2, "Dependency 2", ParameterList(List("apples.com", "pears.co"))),
+        Parameter(propertyConfig2, "Dependency 2", ParameterSeq(List("apples.com", "pears.co"))),
       ))
 
       val dependency21Node = node("Dependency 2 1")

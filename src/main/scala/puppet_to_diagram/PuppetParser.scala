@@ -19,7 +19,7 @@ object PuppetParser {
         val parameterConfig = parametersToRepresent.filter(_.rawName == name).head
         val prettyName = parameterConfig.prettyName
         if (value.startsWith("[")) {
-          Parameter(parameterConfig, prettyName, ParameterList(value))
+          Parameter(parameterConfig, prettyName, ParameterSeq(value))
         } else {
           Parameter(parameterConfig, prettyName, ParameterString.buildWithCleanUp(value))
         }

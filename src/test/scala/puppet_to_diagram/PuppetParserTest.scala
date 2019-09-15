@@ -79,7 +79,7 @@ class PuppetParserTest extends Specification {
 
     val expected = CoreEntity("class_name", List(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("pinnaple.io")),
-      Parameter(parameterConfig2, "Dependency 2", ParameterList(List("apples.com", "pears.co")),
+      Parameter(parameterConfig2, "Dependency 2", ParameterSeq(List("apples.com", "pears.co")),
     )))
 
     result must be equalTo Right(expected)
@@ -128,7 +128,7 @@ class PuppetParserTest extends Specification {
 
     val expected = CoreEntity("class_name", List(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("olives.pt")),
-      Parameter(parameterConfig2, "Dependency 2", ParameterList(List("apples.com", "pears.co"))
+      Parameter(parameterConfig2, "Dependency 2", ParameterSeq(List("apples.com", "pears.co"))
     )))
 
     result must be equalTo Right(expected)

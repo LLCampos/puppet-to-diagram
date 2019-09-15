@@ -48,7 +48,7 @@ object CoreEntity {
     coreEntity.links.map { p =>
       p.value match {
         case ParameterString(v) => ParameterNodeData(p, Seq(buildPropertyNode(p.prettyName, v, p.config, coreEntity)))
-        case ParameterList(l)   =>
+        case ParameterSeq(l)   =>
           val nodes = l.zipWithIndex.map { case (v, i) =>
             buildPropertyNode(s"${p.prettyName} ${i + 1}", v, p.config, coreEntity)
           }

@@ -15,19 +15,17 @@ object ParameterString {
   }
 }
 
-// TODO: Should be Seq instead of List?
-case class ParameterList(value: List[String]) extends ParameterValue
-object ParameterList {
-  def apply(value: String): ParameterList =
-    new ParameterList(processListEntity(value))
+case class ParameterSeq(value: Seq[String]) extends ParameterValue
+object ParameterSeq {
+  def apply(value: String): ParameterSeq =
+    new ParameterSeq(processListEntity(value))
 
-  private def processListEntity(value: String): List[String] = {
+  private def processListEntity(value: String): Seq[String] = {
     value
       .stripPrefix("[").stripSuffix("]").trim
       .split("\n")
       .map(_.trim.stripSuffix(","))
       .map(ParameterString.buildWithCleanUp(_).value)
-      .toList
   }
 }
 
