@@ -4,8 +4,13 @@ import guru.nidi.graphviz.attribute.{Color, Label, Shape, Style}
 import guru.nidi.graphviz.model.Factory._
 import guru.nidi.graphviz.model.{Graph, Node}
 
+sealed trait ParameterValue
+case class ParameterString(value: String) extends ParameterValue
+// TODO: Should be Seq instead of List?
+case class ParameterList(value: List[String]) extends ParameterValue
+
 case class CoreEntity(name: String, links: Seq[Parameter])
-case class Parameter(config: ParameterConfig, showName: String, value: String)
+case class Parameter(config: ParameterConfig, prettyName: String, value: ParameterValue)
 case class ParameterConfig(rawName: String, prettyName: String, arrowDirection: ArrowDirection)
 
 sealed trait ArrowDirection
@@ -13,7 +18,7 @@ object In extends ArrowDirection
 object Out extends ArrowDirection
 
 case class CoreNodeData(coreEntity: CoreEntity, node: Node, links: Seq[ParameterNodeData])
-case class ParameterNodeData(parameter: Parameter, node: Node)
+case class ParameterNodeData(parameter: Parameter, nodes: Seq[Node])
 
 object CoreEntity {
   val ColorCoreNode: Color = Color.rgb("FFE5CC")
@@ -26,8 +31,11 @@ object CoreEntity {
 
   private def buildGraph(coreNodeData: CoreNodeData): Graph = {
     val baseGraph = buildBaseGraph(coreNodeData)
-    coreNodeData.links.foldLeft(baseGraph)((g, n) => g.`with`(n.node))
+    coreNodeData.links.foldLeft(baseGraph)((g, n) => addNodesToGraph(g, n.nodes))
   }
+
+  private def addNodesToGraph(graph: Graph, nodes: Seq[Node]): Graph =
+    nodes.foldLeft(graph)((g, n) => g.`with`(n))
 
   private def buildBaseGraph(coreNodeData: CoreNodeData): Graph =
     graph().`with`(coreNodeData.node).directed().nodeAttr().`with`(Shape.RECTANGLE)
@@ -42,30 +50,42 @@ object CoreEntity {
   }
 
   private def buildPropertyNodeDatas(coreEntity: CoreEntity): Seq[ParameterNodeData] =
-    coreEntity.links.map(p => ParameterNodeData(p, buildPropertyNode(p, coreEntity)))
+    coreEntity.links.map { p =>
+      p.value match {
+        case ParameterString(v) => ParameterNodeData(p, Seq(buildPropertyNode(p.prettyName, v, p.config, coreEntity)))
+        case ParameterList(l)   =>
+          val nodes = l.zipWithIndex.map { case (v, i) =>
+            buildPropertyNode(s"${p.prettyName} ${i + 1}", v, p.config, coreEntity)
+          }
+          ParameterNodeData(p, nodes)
+      }
+    }
 
-  private def buildPropertyNode(parameter: Parameter, coreEntity: CoreEntity): Node = {
-    val parameterNode = prettifyPropertyNode(node(parameter.showName), parameter)
-    if (parameter.config.arrowDirection == Out)
+  private def buildPropertyNode(nodeName: String, nodeValue: String, parameterConfig: ParameterConfig, coreEntity: CoreEntity): Node = {
+    val parameterNode = prettifyPropertyNode(node(nodeName), nodeValue)
+    if (parameterConfig.arrowDirection == Out)
         parameterNode.link(node(coreEntity.name))
     else
         parameterNode
   }
 
-  private def prettifyPropertyNode(node: Node, parameter: Parameter) =
+  private def prettifyPropertyNode(node: Node, nodeValue: String) =
     node
-      .`with`(buildNodeLabelForProperty(parameter))
+      .`with`(buildNodeLabelForProperty(node, nodeValue))
       .`with`(Style.FILLED, ColorPropertyNodes)
 
-  private def buildNodeLabelForProperty(parameter: Parameter) = {
-    Label.html(s"<b>${parameter.showName}</b><br/>${parameter.value}")
+  private def buildNodeLabelForProperty(node: Node, nodeValue: String) = {
+    Label.html(s"<b>${node.name()}</b><br/>$nodeValue")
   }
 
   private def buildCoreNode(coreEntity: CoreEntity, parameterNodeDatas: Seq[ParameterNodeData]): Node = {
     val baseNode = prettifyCoreNode(node(coreEntity.name))
     parameterNodeDatas.filter(_.parameter.config.arrowDirection == In)
-      .foldLeft(baseNode)((n, p) => n.link(p.node))
+      .foldLeft(baseNode)((n, p) => linkNodesToCoreNode(n, p.nodes))
   }
+
+  private def linkNodesToCoreNode(baseNode: Node, otherNodes: Seq[Node]): Node =
+    otherNodes.foldLeft(baseNode)((n, p) => n.link(p))
 
   private def prettifyCoreNode(node: Node): Node =
     node.`with`(Style.FILLED, ColorCoreNode)

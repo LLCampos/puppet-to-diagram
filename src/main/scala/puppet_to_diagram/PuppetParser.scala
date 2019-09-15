@@ -17,13 +17,14 @@ object PuppetParser {
     defaultsCursor.as[Map[String, String]].map(_.toList.collect {
       case (name, value) if parametersToRepresent.map(_.rawName).contains(name) =>
         val parameterConfig = parametersToRepresent.filter(_.rawName == name).head
-        val showName = parameterConfig.prettyName
+        val prettyName = parameterConfig.prettyName
         if (value.startsWith("[")) {
-          processListEntity(value).zipWithIndex.map { case (v, i) => Parameter(parameterConfig, s"$showName ${i + 1}", v) }
+          // TODO: Create inits for ParameterList and ParameterString
+          Parameter(parameterConfig, prettyName, ParameterList(processListEntity(value)))
         } else {
-          List(Parameter(parameterConfig, showName, processStringEntity(value)))
+          Parameter(parameterConfig, prettyName, ParameterString(processStringEntity(value)))
         }
-    }.flatten)
+    })
   }
 
   private def processStringEntity(value: String) = {
@@ -66,7 +67,7 @@ object PuppetParser {
   private def overrideProperties(coreEntity: CoreEntity, hieraProperties: Map[String, String]): CoreEntity = {
     val overriddenLinks = coreEntity.links.map { link =>
       hieraProperties.get(link.config.rawName) match {
-        case Some(value) => link.copy(value = processStringEntity(value))
+        case Some(value) => link.copy(value = ParameterString(processStringEntity(value)))
         case None => link
       }
     }
