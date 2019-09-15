@@ -19,30 +19,14 @@ object PuppetParser {
         val parameterConfig = parametersToRepresent.filter(_.rawName == name).head
         val prettyName = parameterConfig.prettyName
         if (value.startsWith("[")) {
-          // TODO: Create inits for ParameterList and ParameterString
-          Parameter(parameterConfig, prettyName, ParameterList(processListEntity(value)))
+          Parameter(parameterConfig, prettyName, ParameterList(value))
         } else {
-          Parameter(parameterConfig, prettyName, ParameterString(processStringEntity(value)))
+          Parameter(parameterConfig, prettyName, ParameterString.buildWithCleanUp(value))
         }
     })
   }
 
-  private def processStringEntity(value: String) = {
-    stripUrlDetails(value.stripPrefix("\"").stripSuffix("\""))
-  }
 
-  private def stripUrlDetails(value: String) = {
-    value.split("://")(1).split(""":\d+\?""")(0)
-  }
-
-  private def processListEntity(value: String): List[String] = {
-    value
-      .stripPrefix("[").stripSuffix("]").trim
-      .split("\n")
-      .map(_.trim.stripSuffix(","))
-      .map(processStringEntity)
-      .toList
-  }
 
   def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
   ): Either[DecodingFailure, CoreEntity] = {
@@ -67,7 +51,7 @@ object PuppetParser {
   private def overrideProperties(coreEntity: CoreEntity, hieraProperties: Map[String, String]): CoreEntity = {
     val overriddenLinks = coreEntity.links.map { link =>
       hieraProperties.get(link.config.rawName) match {
-        case Some(value) => link.copy(value = ParameterString(processStringEntity(value)))
+        case Some(value) => link.copy(value = ParameterString.buildWithCleanUp(value))
         case None => link
       }
     }

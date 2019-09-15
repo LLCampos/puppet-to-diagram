@@ -4,11 +4,6 @@ import guru.nidi.graphviz.attribute.{Color, Label, Shape, Style}
 import guru.nidi.graphviz.model.Factory._
 import guru.nidi.graphviz.model.{Graph, Node}
 
-sealed trait ParameterValue
-case class ParameterString(value: String) extends ParameterValue
-// TODO: Should be Seq instead of List?
-case class ParameterList(value: List[String]) extends ParameterValue
-
 case class CoreEntity(name: String, links: Seq[Parameter])
 case class Parameter(config: ParameterConfig, prettyName: String, value: ParameterValue)
 case class ParameterConfig(rawName: String, prettyName: String, arrowDirection: ArrowDirection)
