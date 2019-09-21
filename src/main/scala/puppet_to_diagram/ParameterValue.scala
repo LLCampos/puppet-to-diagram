@@ -17,10 +17,13 @@ object ParameterString {
 
 case class ParameterSeq(value: Seq[String]) extends ParameterValue
 object ParameterSeq {
-  def apply(value: String): ParameterSeq =
-    new ParameterSeq(processListEntity(value))
+  def buildWithCleanUp(value: Seq[String]): ParameterSeq =
+    ParameterSeq(value.map(ParameterString.buildWithCleanUp(_).value))
 
-  private def processListEntity(value: String): Seq[String] = {
+  def apply(value: String): ParameterSeq =
+    new ParameterSeq(processSeqEntity(value))
+
+  private def processSeqEntity(value: String): Seq[String] = {
     value
       .stripPrefix("[").stripSuffix("]").trim
       .split("\n")

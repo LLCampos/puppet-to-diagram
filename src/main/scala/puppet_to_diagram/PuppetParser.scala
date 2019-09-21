@@ -26,8 +26,6 @@ object PuppetParser {
     })
   }
 
-
-
   def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
   ): Either[DecodingFailure, CoreEntity] = {
     val hieraProperties = extractHieraParametersForClass(hieraPuppetNode, puppetClassToRepresent.name, parametersToRepresent)
@@ -35,7 +33,7 @@ object PuppetParser {
     coreEntity.map(overrideProperties(_, hieraProperties))
   }
 
-  private def extractHieraParametersForClass(hieraJson: Json, classToRepresent: String, parametersToRepresent: List[ParameterConfig]): Map[String, String] =
+  private def extractHieraParametersForClass(hieraJson: Json, classToRepresent: String, parametersToRepresent: List[ParameterConfig]): Map[String, Seq[String]] =
     parametersToRepresent.map(p => {
       val hieraParameter = generateHieraParameter(classToRepresent, p.rawName)
       p.rawName -> getValueFromJson(hieraJson, hieraParameter)
@@ -45,13 +43,21 @@ object PuppetParser {
     s"$className::$parameterName"
 
   private def getValueFromJson(json: Json, key: String) = {
-    json.hcursor.downField(key).focus.flatMap(_.asString)
+    json.hcursor.downField(key).focus.flatMap {
+      case json if json.isArray => json.asArray.map(_.flatMap(_.asString))
+      case json => json.asString.map(Seq(_))
+    }
   }
 
-  private def overrideProperties(coreEntity: CoreEntity, hieraProperties: Map[String, String]): CoreEntity = {
+  private def overrideProperties(coreEntity: CoreEntity, hieraProperties: Map[String, Seq[String]]): CoreEntity = {
     val overriddenLinks = coreEntity.links.map { link =>
       hieraProperties.get(link.config.rawName) match {
-        case Some(value) => link.copy(value = ParameterString.buildWithCleanUp(value))
+        case Some(value) =>
+          if (value.size == 1) {
+            link.copy(value = ParameterString.buildWithCleanUp(value.head))
+          } else {
+            link.copy(value = ParameterSeq.buildWithCleanUp(value))
+          }
         case None => link
       }
     }
