@@ -1,6 +1,7 @@
 package puppet_to_diagram
 
 import io.circe.{ACursor, DecodingFailure, Json}
+import io.circe.yaml.{parser => yamlParser}
 
 case class PuppetClass(name: String, definition: Json)
 
@@ -26,7 +27,12 @@ object PuppetParser {
     })
   }
 
-  def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
+  def generateCoreEntityFromHieraPuppetNodeYaml(hieraPuppetNodeYaml: String, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]): Either[io.circe.Error, CoreEntity] =
+    yamlParser.parse(hieraPuppetNodeYaml).right.flatMap(
+      generateCoreEntityFromHieraPuppetNodeJson(_, puppetClassToRepresent, parametersToRepresent)
+    )
+
+  private def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
   ): Either[DecodingFailure, CoreEntity] = {
     val hieraProperties = extractHieraParametersForClass(hieraPuppetNode, puppetClassToRepresent.name, parametersToRepresent)
     val coreEntity = generateCoreEntityFromPuppetClassJson(puppetClassToRepresent.definition, parametersToRepresent)

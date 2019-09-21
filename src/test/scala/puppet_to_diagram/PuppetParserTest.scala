@@ -2,7 +2,6 @@ package puppet_to_diagram
 
 import org.specs2.mutable.Specification
 import io.circe.literal._
-import io.circe.yaml.{parser => yamlParser}
 
 
 class PuppetParserTest extends Specification {
@@ -118,10 +117,8 @@ class PuppetParserTest extends Specification {
     val parameterConfig1 = ParameterConfig("dependency1", "Dependency 1", In)
     val parameterConfig2 = ParameterConfig("dependency2", "Dependency 2", Out)
 
-    val hieraNodeJson = yamlParser.parse(hieraNodeYaml).right.get
-
     val puppetClass = PuppetClass("class_name", classJson)
-    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeJson(hieraNodeJson, puppetClass, List(
+    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeYaml(hieraNodeYaml, puppetClass, List(
       parameterConfig1,
       parameterConfig2
     ))
@@ -169,10 +166,8 @@ class PuppetParserTest extends Specification {
     val parameterConfig1 = ParameterConfig("dependency1", "Dependency 1", In)
     val parameterConfig2 = ParameterConfig("dependency2", "Dependency 2", Out)
 
-    val hieraNodeJson = yamlParser.parse(hieraNodeYaml).right.get
-
     val puppetClass = PuppetClass("class_name", classJson)
-    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeJson(hieraNodeJson, puppetClass, List(
+    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeYaml(hieraNodeYaml, puppetClass, List(
       parameterConfig1,
       parameterConfig2
     ))
