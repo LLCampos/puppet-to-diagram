@@ -1,15 +1,20 @@
 import io.circe.parser._
-import puppet_to_diagram.{Config, CoreEntity, GraphPrinter, In, Out, ParameterConfig, PuppetClass, PuppetParser}
+import puppet_to_diagram._
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 
 import scala.io.Source
 import scala.language.postfixOps
-import sys.process._
+import scala.sys.process._
 
 object Main extends App {
 
   val configEither = ConfigSource.default.load[Config]
+  if (configEither.isLeft) {
+    System.err.println(s"failed to load configration: ${configEither.left.get}")
+    System.exit(1)
+  }
+
   val config = configEither.right.get
 
   val initPath = s"${config.pathToPuppetProject}/environments/${config.environment}/modules/${config.module}/manifests/init.pp"
@@ -29,5 +34,6 @@ object Main extends App {
 
   graph match {
     case Right(g) => GraphPrinter.createFile(g, s"${config.module}_${config.environment}.png")
+    case Left(e)  => println("Something went wrong: " + e)
   }
 }
