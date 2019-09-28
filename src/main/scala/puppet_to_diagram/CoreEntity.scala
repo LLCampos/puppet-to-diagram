@@ -6,11 +6,6 @@ import guru.nidi.graphviz.model.{Graph, Node}
 
 case class CoreEntity(name: String, links: Seq[Parameter])
 case class Parameter(config: ParameterConfig, prettyName: String, value: ParameterValue)
-case class ParameterConfig(rawName: String, prettyName: String, arrowDirection: ArrowDirection)
-
-sealed trait ArrowDirection
-object In extends ArrowDirection
-object Out extends ArrowDirection
 
 case class CoreNodeData(coreEntity: CoreEntity, node: Node, links: Seq[ParameterNodeData])
 case class ParameterNodeData(parameter: Parameter, nodes: Seq[Node])

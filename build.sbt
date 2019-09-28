@@ -17,6 +17,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.6.0" % "test",
   "guru.nidi" % "graphviz-java" % "0.10.0",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
+  "com.github.pureconfig" %% "pureconfig" % "0.12.0"
 )
 
 scalacOptions in Test ++= Seq("-Yrangepos")
