@@ -3,7 +3,8 @@ import java.nio.file.{Path, Paths}
 
 
 case class CliOptions(
-  configPath: Path = Paths.get(System.getProperty("user.home"), ".puppet-to-diagram.conf"),
+  generalConfigPath: Path = Paths.get(System.getProperty("user.home"), ".puppet-to-diagram.conf"),
+  diagramConfigPath: Option[Path] = None,
   environment: String = "production")
 
 
@@ -12,9 +13,14 @@ object CliClient extends App {
   val parser = new scopt.OptionParser[CliOptions]("puppet-to-diagram") {
     head("Puppet To Diagram", "0.1")
 
-    opt[File]('c', "config")
-      .action((c, cliOptions) => cliOptions.copy(configPath = c.toPath))
-      .text("config file to load. default is \".puppet-to-diagram.conf\" in your user directory.")
+    opt[File]('c', "general-config")
+      .action((c, cliOptions) => cliOptions.copy(generalConfigPath = c.toPath))
+      .text("config file with general data to load. default is \".puppet-to-diagram.conf\" in your user directory.")
+
+    opt[File]('d', "diagram-config")
+      .action((c, cliOptions) => cliOptions.copy(diagramConfigPath = Some(c.toPath)))
+      .text("config file with diagram-specific data")
+      .required()
 
     opt[String]('e', "environment")
       .action((e, cliOptions) => cliOptions.copy(environment = e))

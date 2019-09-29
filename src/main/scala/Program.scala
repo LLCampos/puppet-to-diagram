@@ -10,7 +10,10 @@ import scala.sys.process._
 object Program {
 
   def run(cliOptions: CliOptions): Unit = {
-    val configEither = ConfigSource.file(cliOptions.configPath).load[Config]
+    val generalConfigSource = ConfigSource.file(cliOptions.generalConfigPath)
+    val diagramConfigSource = ConfigSource.file(cliOptions.diagramConfigPath.get)
+
+    val configEither = generalConfigSource.withFallback(diagramConfigSource).load[Config]
     if (configEither.isLeft) {
       System.err.println(s"failed to load configuration: ${configEither.left.get}")
       System.exit(1)
