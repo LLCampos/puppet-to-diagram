@@ -2,7 +2,6 @@ package puppet_to_diagram
 
 case class Config(
   pathToPuppetProject: String,
-  environment: String,
   module: String,
   parametersConfigs: List[ParameterConfig])
 
