@@ -4,6 +4,8 @@
 
 (have some examples here)
 
+(note that I'm not much experienced on Puppet, and this might no generalize to all Puppet projects)
+
 # How to use
 
 ## Installation
@@ -46,12 +48,12 @@ parameters-configs = [
 
 On `parameter-configs` you configure which data you want to see represented on the diagram.
 
-The `arrow-direction` configures if the arrow connected to the node representing that parameter will be incoming or outcoming.
+The `arrow-direction` configures if the arrow connected to the node representing that parameter will be incoming or outgoing.
 
 ## How to run
 
 ```
-puppet-to-diagram --diagram-config ~/path/to/diagram-specific-conf.conf --environment development
+puppet-to-diagram --diagram-config ~/path/to/diagram-specific-conf.conf --environment development --server myserver.trees.com
 ```
 
 Run `puppet-to-diagram --help` for details.

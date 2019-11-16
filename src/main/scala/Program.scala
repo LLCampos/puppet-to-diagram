@@ -22,23 +22,30 @@ object Program {
     val config = configEither.right.get
 
     val initPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/modules/${config.module}/manifests/init.pp"
-    val commonYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/common.yaml"
-
     val jsonString = s"puppet strings generate --format json $initPath" !!
 
-    val commonYamlFile = Source.fromFile(commonYamlPath)
-    val commonYamlString = commonYamlFile.getLines.mkString("\n")
-    commonYamlFile.close()
+    val commonYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/common.yaml"
+    val commonYamlString = getYamlString(commonYamlPath)
+
+    val serverYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/nodes/${cliOptions.server}.yaml"
+    val serverYamlString = getYamlString(serverYamlPath)
 
     val graph = for {
       json <- parse(jsonString)
       puppetClass = PuppetClass(config.module, json)
-      node <- PuppetParser.generateCoreEntityFromHieraPuppetNodeYaml(commonYamlString, puppetClass, config.parametersConfigs)
+      node <- PuppetParser.generateCoreEntityFromHieraYamls(serverYamlString, commonYamlString, puppetClass, config.parametersConfigs)
     } yield CoreEntity.toGraphvizGraph(node)
 
     graph match {
-      case Right(g) => GraphPrinter.createFile(g, s"${config.module}_${cliOptions.environment}.png")
+      case Right(g) => GraphPrinter.createFile(g, s"${config.module}_${cliOptions.server}.png")
       case Left(e)  => println("Something went wrong: " + e)
     }
+  }
+
+  private def getYamlString(yamlPath: String) = {
+    val yamlFile = Source.fromFile(yamlPath)
+    val yamlString = yamlFile.getLines.mkString("\n")
+    yamlFile.close()
+    yamlString
   }
 }

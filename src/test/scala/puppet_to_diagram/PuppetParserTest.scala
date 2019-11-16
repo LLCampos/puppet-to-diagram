@@ -84,7 +84,7 @@ class PuppetParserTest extends Specification {
     result must be equalTo Right(expected)
   }
 
-  "generateCoreEntityFromHieraPuppetNodeJson should generate correct entity from Hiera Puppet Node and class definition (hiera with simple values)" in {
+  "generateCoreEntityFromHieraYamls should generate correct entity from Hiera Puppet Node and class definition (hiera with simple values)" in {
 
     val hieraNodeYaml = """classes:
                       |  - class_name
@@ -118,7 +118,7 @@ class PuppetParserTest extends Specification {
     val parameterConfig2 = ParameterConfig("dependency2", "Dependency 2", Out)
 
     val puppetClass = PuppetClass("class_name", classJson)
-    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeYaml(hieraNodeYaml, puppetClass, List(
+    val result = PuppetParser.generateCoreEntityFromHieraYamls(hieraNodeYaml, "", puppetClass, List(
       parameterConfig1,
       parameterConfig2
     ))
@@ -131,7 +131,7 @@ class PuppetParserTest extends Specification {
     result must be equalTo Right(expected)
   }
 
-  "generateCoreEntityFromHieraPuppetNodeJson should generate correct entity from Hiera Puppet Node and class definition (hiera with list values)" in {
+  "generateCoreEntityFromHieraYamls should generate correct entity from Hiera Puppet Node and class definition (hiera with list values)" in {
 
     val hieraNodeYaml = """classes:
                           |  - class_name
@@ -167,7 +167,7 @@ class PuppetParserTest extends Specification {
     val parameterConfig2 = ParameterConfig("dependency2", "Dependency 2", Out)
 
     val puppetClass = PuppetClass("class_name", classJson)
-    val result = PuppetParser.generateCoreEntityFromHieraPuppetNodeYaml(hieraNodeYaml, puppetClass, List(
+    val result = PuppetParser.generateCoreEntityFromHieraYamls(hieraNodeYaml, "", puppetClass, List(
       parameterConfig1,
       parameterConfig2
     ))
@@ -175,7 +175,64 @@ class PuppetParserTest extends Specification {
     val expected = CoreEntity("class_name", Seq(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("pinnaple.io")),
       Parameter(parameterConfig2, "Dependency 2", ParameterSeq(Seq("olives.pt", "avocado.org"))
-    )))
+      )))
+
+    result must be equalTo Right(expected)
+  }
+
+  "generateCoreEntityFromHieraYamls should generate correct entity from Hiera Puppet Node, Hiera Common and class definition" in {
+
+    val hieraNodeYaml = """classes:
+                          |  - class_name
+                          |
+                          |class_name::dependency2:
+                          |   - https://oatmeal.pt
+                          |   - http://oranges.org""".stripMargin
+
+    val hieraCommonYaml = """classes:
+                          |  - class_name
+                          |
+                          |class_name::dependency2:
+                          |   - https://olives.pt
+                          |   - http://avocado.org
+                          |class_name::dependency1: http://peanuts.org""".stripMargin
+
+    val classJson = json"""{
+        "puppet_classes": [
+          {
+            "name": "class_name",
+            "file": "init.pp",
+            "line": 1,
+            "docstring": {
+              "text": ""
+            },
+            "defaults": {
+              "dependency1": "\"https://pinnaple.io\"",
+              "variable1": "\"bananas\"",
+              "dependency2": "[\n    \"https://apples.com\",\n    \"http://pears.co\"\n  ]"
+            },
+            "source": "blabla"
+          }
+        ],
+        "data_types": [
+
+        ]
+      }
+      """
+
+    val parameterConfig1 = ParameterConfig("dependency1", "Dependency 1", In)
+    val parameterConfig2 = ParameterConfig("dependency2", "Dependency 2", Out)
+
+    val puppetClass = PuppetClass("class_name", classJson)
+    val result = PuppetParser.generateCoreEntityFromHieraYamls(hieraNodeYaml, hieraCommonYaml, puppetClass, List(
+      parameterConfig1,
+      parameterConfig2
+    ))
+
+    val expected = CoreEntity("class_name", Seq(
+      Parameter(parameterConfig1, "Dependency 1", ParameterString("peanuts.org")),
+      Parameter(parameterConfig2, "Dependency 2", ParameterSeq(Seq("oatmeal.pt", "oranges.org"))
+      )))
 
     result must be equalTo Right(expected)
   }

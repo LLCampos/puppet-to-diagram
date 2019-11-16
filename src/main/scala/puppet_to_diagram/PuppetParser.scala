@@ -27,10 +27,16 @@ object PuppetParser {
     })
   }
 
-  def generateCoreEntityFromHieraPuppetNodeYaml(hieraPuppetNodeYaml: String, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]): Either[io.circe.Error, CoreEntity] =
-    yamlParser.parse(hieraPuppetNodeYaml).right.flatMap(
+  def generateCoreEntityFromHieraYamls(hieraPuppetNodeYaml: String, hieraPuppetCommonYaml: String, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]): Either[io.circe.Error, CoreEntity] = {
+    val mergedHieraJson = for {
+      hieraPuppetNodeJson <- yamlParser.parse(hieraPuppetNodeYaml)
+      hieraPuppetCommonJson <- yamlParser.parse(hieraPuppetCommonYaml)
+    } yield hieraPuppetCommonJson.deepMerge(hieraPuppetNodeJson)
+
+    mergedHieraJson.right.flatMap(
       generateCoreEntityFromHieraPuppetNodeJson(_, puppetClassToRepresent, parametersToRepresent)
     )
+  }
 
   private def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
   ): Either[DecodingFailure, CoreEntity] = {
