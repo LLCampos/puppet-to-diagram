@@ -6,7 +6,7 @@ case class CliOptions(
   generalConfigPath: Path = Paths.get(System.getProperty("user.home"), ".puppet-to-diagram.conf"),
   diagramConfigPath: Option[Path] = None,
   environment: String = "production",
-  server: String = "all")
+  server: Option[String] = None)
 
 
 object CliClient extends App {
@@ -28,8 +28,9 @@ object CliClient extends App {
       .text("which puppet environment to build the diagram from")
 
     opt[String]('s', "server")
-      .action((s, cliOptions) => cliOptions.copy(server = s))
-      .text("which server to build to diagram for. 'all' to build for all servers.")
+      .action((s, cliOptions) => cliOptions.copy(server = Some(s)))
+      .text("which server to build the diagram for")
+      .required()
 
     help("help").text("show this help info")
   }

@@ -27,7 +27,7 @@ object Program {
     val commonYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/common.yaml"
     val commonYamlString = getYamlString(commonYamlPath)
 
-    val serverYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/nodes/${cliOptions.server}.yaml"
+    val serverYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/nodes/${cliOptions.server.get}.yaml"
     val serverYamlString = getYamlString(serverYamlPath)
 
     val graph = for {
@@ -37,7 +37,7 @@ object Program {
     } yield CoreEntity.toGraphvizGraph(node)
 
     graph match {
-      case Right(g) => GraphPrinter.createFile(g, s"${config.module}_${cliOptions.server}.png")
+      case Right(g) => GraphPrinter.createFile(g, s"${config.module}_${cliOptions.server.get}.png")
       case Left(e)  => println("Something went wrong: " + e)
     }
   }
