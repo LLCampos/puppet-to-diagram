@@ -1,10 +1,10 @@
 # puppet-to-diagram
 
-(write explanation of the application)
+Generate diagrams representing your Puppet nodes.
 
-(have some examples here)
+![usage demo](https://raw.githubusercontent.com/LLCampos/puppet-to-diagram/master/demo.gif)
 
-(note that I'm not much experienced on Puppet, and this might no generalize to all Puppet projects)
+Note that I'm not much experienced on Puppet, and this might no generalize to all Puppet projects.
 
 # How to use
 
