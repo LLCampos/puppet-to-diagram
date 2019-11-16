@@ -27,17 +27,18 @@ object Program {
     val commonYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/common.yaml"
     val commonYamlString = getYamlString(commonYamlPath)
 
-    val serverYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/nodes/${cliOptions.server.get}.yaml"
+    val serverName = cliOptions.server.get
+    val serverYamlPath = s"${config.pathToPuppetProject}/environments/${cliOptions.environment}/data/nodes/$serverName.yaml"
     val serverYamlString = getYamlString(serverYamlPath)
 
     val graph = for {
       json <- parse(jsonString)
       puppetClass = PuppetClass(config.module, json)
-      node <- PuppetParser.generateCoreEntityFromHieraYamls(serverYamlString, commonYamlString, puppetClass, config.parametersConfigs)
+      node <- PuppetParser.generateCoreEntityFromHieraYamls(serverYamlString, commonYamlString, puppetClass, config.parametersConfigs, serverName)
     } yield CoreEntity.toGraphvizGraph(node)
 
     graph match {
-      case Right(g) => GraphPrinter.createFile(g, s"${config.module}_${cliOptions.server.get}.png")
+      case Right(g) => GraphPrinter.createFile(g, s"${config.module}_$serverName.png")
       case Left(e)  => println("Something went wrong: " + e)
     }
   }

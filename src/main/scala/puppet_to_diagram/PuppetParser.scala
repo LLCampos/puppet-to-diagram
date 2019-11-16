@@ -6,12 +6,11 @@ import io.circe.yaml.{parser => yamlParser}
 case class PuppetClass(name: String, definition: Json)
 
 object PuppetParser {
-  def generateCoreEntityFromPuppetClassJson(puppetClassJson: Json, parametersToRepresent: List[ParameterConfig]): Either[DecodingFailure, CoreEntity] = {
+  def generateCoreEntityFromPuppetClassJson(puppetClassJson: Json, parametersToRepresent: List[ParameterConfig], serverName: String): Either[DecodingFailure, CoreEntity] = {
     val puppetClass = puppetClassJson.hcursor.downField("puppet_classes").downArray
     for {
-      coreEntityName <- puppetClass.downField("name").as[String]
       parameters <- extractPropertiesFromDefaultsCursor(puppetClass.downField("defaults"), parametersToRepresent)
-    } yield CoreEntity(coreEntityName, parameters)
+    } yield CoreEntity(serverName, parameters)
   }
 
   private def extractPropertiesFromDefaultsCursor(defaultsCursor: ACursor, parametersToRepresent: List[ParameterConfig]): Either[DecodingFailure, Seq[Parameter]] = {
@@ -27,21 +26,21 @@ object PuppetParser {
     })
   }
 
-  def generateCoreEntityFromHieraYamls(hieraPuppetNodeYaml: String, hieraPuppetCommonYaml: String, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]): Either[io.circe.Error, CoreEntity] = {
+  def generateCoreEntityFromHieraYamls(hieraPuppetNodeYaml: String, hieraPuppetCommonYaml: String, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig], serverName: String): Either[io.circe.Error, CoreEntity] = {
     val mergedHieraJson = for {
       hieraPuppetNodeJson <- yamlParser.parse(hieraPuppetNodeYaml)
       hieraPuppetCommonJson <- yamlParser.parse(hieraPuppetCommonYaml)
     } yield hieraPuppetCommonJson.deepMerge(hieraPuppetNodeJson)
 
     mergedHieraJson.right.flatMap(
-      generateCoreEntityFromHieraPuppetNodeJson(_, puppetClassToRepresent, parametersToRepresent)
+      generateCoreEntityFromHieraPuppetNodeJson(_, puppetClassToRepresent, parametersToRepresent, serverName)
     )
   }
 
-  private def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig]
+  private def generateCoreEntityFromHieraPuppetNodeJson(hieraPuppetNode: Json, puppetClassToRepresent: PuppetClass, parametersToRepresent: List[ParameterConfig], serverName: String
   ): Either[DecodingFailure, CoreEntity] = {
     val hieraProperties = extractHieraParametersForClass(hieraPuppetNode, puppetClassToRepresent.name, parametersToRepresent)
-    val coreEntity = generateCoreEntityFromPuppetClassJson(puppetClassToRepresent.definition, parametersToRepresent)
+    val coreEntity = generateCoreEntityFromPuppetClassJson(puppetClassToRepresent.definition, parametersToRepresent, serverName)
     coreEntity.map(overrideProperties(_, hieraProperties))
   }
 

@@ -38,9 +38,9 @@ class PuppetParserTest extends Specification {
       parameterConfig1,
       parameterConfig2,
       parameterConfig3
-    ))
+    ), "server.com")
 
-    val expected = CoreEntity("class_name", List(
+    val expected = CoreEntity("server.com", List(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("pinnaple.io")),
       Parameter(parameterConfig2, "Dependency 2", ParameterString("apples.com")),
       Parameter(parameterConfig3, "Dependency 3", ParameterString("localhost")),
@@ -78,9 +78,9 @@ class PuppetParserTest extends Specification {
     val result = PuppetParser.generateCoreEntityFromPuppetClassJson(input, List(
       parameterConfig1,
       parameterConfig2
-    ))
+    ), "server.com")
 
-    val expected = CoreEntity("class_name", List(
+    val expected = CoreEntity("server.com", List(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("pinnaple.io")),
       Parameter(parameterConfig2, "Dependency 2", ParameterSeq(List("apples.com", "pears.co")),
     )))
@@ -125,9 +125,9 @@ class PuppetParserTest extends Specification {
     val result = PuppetParser.generateCoreEntityFromHieraYamls(hieraNodeYaml, "", puppetClass, List(
       parameterConfig1,
       parameterConfig2
-    ))
+    ), "server.com")
 
-    val expected = CoreEntity("class_name", Seq(
+    val expected = CoreEntity("server.com", Seq(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("olives.pt")),
       Parameter(parameterConfig2, "Dependency 2", ParameterSeq(Seq("apples.com", "pears.co"))
     )))
@@ -174,9 +174,9 @@ class PuppetParserTest extends Specification {
     val result = PuppetParser.generateCoreEntityFromHieraYamls(hieraNodeYaml, "", puppetClass, List(
       parameterConfig1,
       parameterConfig2
-    ))
+    ), "server.com")
 
-    val expected = CoreEntity("class_name", Seq(
+    val expected = CoreEntity("server.com", Seq(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("pinnaple.io")),
       Parameter(parameterConfig2, "Dependency 2", ParameterSeq(Seq("olives.pt", "avocado.org"))
       )))
@@ -231,9 +231,9 @@ class PuppetParserTest extends Specification {
     val result = PuppetParser.generateCoreEntityFromHieraYamls(hieraNodeYaml, hieraCommonYaml, puppetClass, List(
       parameterConfig1,
       parameterConfig2
-    ))
+    ), "server.com")
 
-    val expected = CoreEntity("class_name", Seq(
+    val expected = CoreEntity("server.com", Seq(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("peanuts.org")),
       Parameter(parameterConfig2, "Dependency 2", ParameterSeq(Seq("oatmeal.pt", "oranges.org"))
       )))
