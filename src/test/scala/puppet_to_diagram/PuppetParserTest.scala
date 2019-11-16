@@ -19,7 +19,8 @@ class PuppetParserTest extends Specification {
             "defaults": {
               "dependency1": "\"https://pinnaple.io\"",
               "variable1": "\"bananas\"",
-              "dependency2": "\"https://apples.com\""
+              "dependency2": "\"https://apples.com\"",
+              "dependency3": "localhost"
             },
             "source": "blabla"
           }
@@ -31,15 +32,18 @@ class PuppetParserTest extends Specification {
       """
     val parameterConfig1 = ParameterConfig("dependency1", "Dependency 1", In)
     val parameterConfig2 = ParameterConfig("dependency2", "Dependency 2", Out)
+    val parameterConfig3 = ParameterConfig("dependency3", "Dependency 3", Out)
 
     val result = PuppetParser.generateCoreEntityFromPuppetClassJson(input, List(
       parameterConfig1,
-      parameterConfig2
+      parameterConfig2,
+      parameterConfig3
     ))
 
     val expected = CoreEntity("class_name", List(
       Parameter(parameterConfig1, "Dependency 1", ParameterString("pinnaple.io")),
       Parameter(parameterConfig2, "Dependency 2", ParameterString("apples.com")),
+      Parameter(parameterConfig3, "Dependency 3", ParameterString("localhost")),
     ))
 
     result must be equalTo Right(expected)

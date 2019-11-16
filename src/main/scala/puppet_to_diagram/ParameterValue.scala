@@ -11,7 +11,10 @@ object ParameterString {
   }
 
   private def stripUrlDetails(value: String) = {
-    value.split("://")(1).split(""":\d+\?""")(0)
+    value.split("://") match {
+      case v if v.size > 1 => v(1).split(""":\d+\?""")(0)
+      case v => v(0)
+    }
   }
 }
 
